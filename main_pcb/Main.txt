@@ -1,0 +1,25 @@
+﻿Field=#~Integer~#~50|Field=Comment~String~Comment~100|Field=Designator~String~Designator~100|Field=Footprint~String~Footprint~100|Field=jlc~String~jlc~100|ReportField=Currency~<none>|ReportField=ProductionQuantity~1|ReportField=ProjectFileName~Main.PrjPcb|ReportField=ProjectFullPath~C:\OneDrive\00_opensolar\main_pcb\Main.PrjPcb|ReportField=Title~Bill of Materials For Project [Main.PrjPcb] (No PCB Document Selected)|ReportField=TotalQuantity~54|ReportField=ReportTime~3:23:19 PM|ReportField=ReportDate~8/29/2020|ReportField=ReportDateTime~8/29/2020 3:23:19 PM|ReportField=OutputName~Bill of Materials|ReportField=OutputType~BOM_PartType|ReportField=GeneratorName~BOM|ReportField=GeneratorDescription~Bill of Materials|ReportField=VariantName~None|ReportField=Author~Martin Lafleur|ReportField=Company~Opensolar|ReportField=Version~1.0|ReportField=Address1~|ReportField=Address2~|ReportField=Address3~|ReportField=Address4~|ReportField=Application_BuildNumber~|ReportField=ApprovedBy~|ReportField=CheckedBy~|ReportField=CompanyName~|ReportField=ConfigurationParameters~|ReportField=ConfiguratorName~|ReportField=CurrentDate~8/29/2020|ReportField=CurrentTime~3:21:47 PM|ReportField=Date~|ReportField=DocumentFullPathAndName~C:\OneDrive\00_opensolar\main_pcb\Main.SchDoc|ReportField=DocumentName~Main.SchDoc|ReportField=DocumentNumber~|ReportField=DrawnBy~|ReportField=Engineer~|ReportField=ImagePath~|ReportField=IsUserConfigurable~|ReportField=ModifiedDate~8/29/2020|ReportField=Organization~|ReportField=ProjectName~Main.PrjPcb|ReportField=Revision~|ReportField=Rule~|ReportField=SheetNumber~1|ReportField=SheetTotal~2|ReportField=Time~|ReportField=Title~|ReportField=VersionControl_ProjFolderRevNumber~|ReportField=VersionControl_RevNumber~|ReportField=DataSourceFileName~Main.PrjPcb|ReportField=DataSourceFullPath~C:\OneDrive\00_opensolar\main_pcb\Main.PrjPcb|ReportField=PCBDataSourceFileName~Main.PcbDoc|ReportField=PCBDataSourceFullPath~C:\OneDrive\00_opensolar\main_pcb\Main.PcbDoc|ReportField=PCBConfigurationName~Sources|ReportField=Item~|ReportField=ItemRevision~|ReportField=ItemAndRevision~|ReportField=ItemRevisionBase~|ReportField=ItemRevisionLevel1~|ReportField=ItemRevisionLevel2~|ReportField=ItemRevisionLevel1AndBase~|ReportField=ItemRevisionLevel2AndLevel1~
+1|Cap Pol1|C1|SCMR22H155PSBB0|
+2|Cap|C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C16|6-0805_M|
+3|CL21A106KOQNNNE|C15|6-0805_M|
+4|LM4040D30FTA|D1|SOT23_LM4040|
+5|5V1|D2|SMB|
+6|BAT54C|D3|SOT23-DUODIODE|
+7|RED|D4|6-0805_M|
+8|BLUE|D5|6-0805_M|
+9|CIGW252010GL4R7MNE|L1|INDUCTOR_2520 - duplicate1|
+10|Hall & PV|P1|FFC_8|
+11|ESP serial|P2|HEADER-1X5|
+12|ST-LINK|P3|HEADER-1X4|
+13|roll motor|P4|HEADER-1X2|
+14|pitch motor|P5|HEADER-1X2|
+15|PMV35EPER|Q1|PMV35EPER|
+16|10K|R1, R2|6-0805_N|C17414
+17|Res1|R3, R4, R5, R6, R8, R12, R14, R16, R17, R18, R21, R22|6-0805_N|
+18|N.U.|R15|6-0805_N|
+19|TEST_POINT|TP1, TP2, TP3, TP6, TP8, TP9|TEST_POINT_PAD|
+20|STM32L011K4T6|U1|QFP80P900X900X160-32N|
+21|ESP8266 ESP-12-E|U2|ESP8266 ESP-12-E|
+22|TB6652PNG|U3|SSOP16_TB6652|
+23|MIC7221YM5|U4|MIC7221YM5|
+24|PAM2301CAAB330‎|U5|SOT95P280X100-5N|

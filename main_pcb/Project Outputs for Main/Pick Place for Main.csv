@@ -1,0 +1,67 @@
+Altium Designer Pick and Place Locations
+C:\OneDrive\00_opensolar\main_pcb\Project Outputs for Free Documents\Pick Place\Pick Place for Main.csv
+
+========================================================================================================================
+File Design Information:
+
+Date:       30/08/20
+Time:       12:17
+Revision:   Not in VersionControl
+Variant:    No variations
+Units used: mil
+
+"Designator","Comment","Layer","Footprint","Center-X(mil)","Center-Y(mil)","Rotation","Description","jlc"
+"U2","ESP8266 ESP-12-E","TopLayer","ESP8266_ESP-12-E","1548.000","1978.500","90","ESP8266 ESP-12-E",""
+"D5","BLUE","TopLayer","6-0805_M","1305.000","170.000","180","Typical RED, GREEN, YELLOW, AMBER GaAs LED","C72035"
+"D4","RED","TopLayer","6-0805_M","1304.370","275.000","180","Typical RED, GREEN, YELLOW, AMBER GaAs LED","C72037"
+"TP9","TEST_POINT","TopLayer","TEST_POINT_PAD","1010.000","1180.000","90","",""
+"TP8","TEST_POINT","TopLayer","TEST_POINT_PAD","1055.000","1180.000","270","",""
+"TP6","TEST_POINT","TopLayer","TEST_POINT_PAD","1235.000","975.000","360","",""
+"TP3","TEST_POINT","TopLayer","TEST_POINT_PAD","725.000","1184.000","270","",""
+"TP2","TEST_POINT","TopLayer","TEST_POINT_PAD","855.000","1180.000","270","",""
+"TP1","TEST_POINT","TopLayer","TEST_POINT_PAD","980.000","660.000","90","",""
+"R22","47R","TopLayer","6-0805_N","1310.000","75.000","180","Resistor","C17714"
+"R21","47R","TopLayer","6-0805_N","1309.567","375.000","180","Resistor","C17714"
+"R12","33R","TopLayer","6-0805_N","240.000","1285.000","0","Resistor","C17634"
+"R5","10K","TopLayer","6-0805_N","955.433","395.000","360","Resistor","C17414"
+"D1","LM4040D30FTA","TopLayer","SOT23_LM4040","545.000","1245.000","0","Zener Diode",""
+"C11","1uF","TopLayer","6-0805_M","240.630","1190.000","180","Capacitor","C28323"
+"C8","1uF","TopLayer","6-0805_M","950.630","295.000","360","Capacitor","C28323"
+"C7","1uF","TopLayer","6-0805_M","794.370","1555.000","180","Capacitor","C28323"
+"C6","1uF","TopLayer","6-0805_M","379.370","1485.000","180","Capacitor","C28323"
+"C5","1uF","TopLayer","6-0805_M","795.630","1445.000","180","Capacitor","C28323"
+"C4","1uF","TopLayer","6-0805_M","380.630","1590.000","180","Capacitor","C28323"
+"C3","1uF","TopLayer","6-0805_M","1639.370","845.000","180","Capacitor","C28323"
+"C2","1uF","TopLayer","6-0805_M","1639.370","740.000","180","Capacitor","C28323"
+"U5","PAM2301CAAB330","TopLayer","SOT95P280X100-5N","1690.000","460.000","270","Buck Switching Regulator IC Positive Fixed 1.2V 1 Output 800mA SOT-23-5 Thin, TSOT-23-5","C9051"
+"R18","10K","TopLayer","6-0805_N","1635.433","1040.000","0","Resistor","C17414"
+"R17","10K","TopLayer","6-0805_N","1635.433","1225.000","180","Resistor","C17414"
+"R16","1K","TopLayer","6-0805_N","1635.000","1310.000","0","Resistor","C17513"
+"R15","10M","TopLayer","6-0805_N","635.000","785.000","0","Resistor","C26108"
+"R14","0R","TopLayer","6-0805_N","635.433","690.000","0","Resistor","C17477"
+"R4","10K","TopLayer","6-0805_N","565.433","1775.000","180","Resistor","C17414"
+"R3","10K","TopLayer","6-0805_N","209.567","1490.000","180","Resistor","C17414"
+"R2","10K","TopLayer","6-0805_N","565.433","1680.000","180","Resistor","C17414"
+"R1","10K","TopLayer","6-0805_N","210.433","1580.000","180","Resistor","C17414"
+"Q1","PMV35EPER","TopLayer","PMV35EPER","1645.000","1435.000","360","P-Channel MOSFET",""
+"L1","CIGW252010GL4R7MNE","TopLayer","INDUCTOR_2520_-_duplicate1","1695.000","235.000","360","Inductor","C86070"
+"C16","1uF","TopLayer","6-0805_M","1920.000","405.000","180","Capacitor","C28323"
+"C15","10uF","TopLayer","6-0805_M","1920.630","510.000","180","","C15850"
+"C14","1uF","TopLayer","6-0805_M","1639.370","950.000","0","Capacitor","C28323"
+"C13","1uF","TopLayer","6-0805_M","1639.370","1130.000","180","Capacitor","C28323"
+"C12","1uF","TopLayer","6-0805_M","1290.630","1320.000","180","Capacitor","C28323"
+"C10","1uF","TopLayer","6-0805_M","2010.000","1830.630","270","Capacitor","C28323"
+"C9","1uF","TopLayer","6-0805_M","1054.370","1400.000","360","Capacitor","C28323"
+"C1","Cap Pol1","TopLayer","SCMR22H155PSBB0","1965.000","958.622","270","Polarized Capacitor (Radial)",""
+"R6","10K","TopLayer","6-0805_N","1269.567","1045.000","180","Resistor","C17414"
+"D2","1SMB5918BT3G","TopLayer","SMB","2017.008","1505.000","360","Zener Diode","C142361"
+"P1","Hall & PV","TopLayer","FFC_8","331.623","1816.302","55","Header, 8-Pin",""
+"U1","STM32L011K4T6","TopLayer","QFP80P900X900X160-32N","965.000","915.000","270","ARM® Cortex®-M0 + STM32L0 Microcontrolador IC de 32 bits 32MHz 16KB _16K x 8_ FLASH 32-LQFP _7x7_","C87904"
+"U3","TB6652PNG","TopLayer","SSOP16_TB6652","318.386","754.173","90","",""
+"P2","ESP serial","TopLayer","HEADER-1X5","789.000","1910.000","0","Header, 5-Pin",""
+"P3","ST-LINK","TopLayer","HEADER-1X4","1285.000","560.000","270","Header, 4-Pin",""
+"P4","roll motor","TopLayer","HEADER-1X2","485.000","535.000","90","Header, 2-Pin",""
+"P5","pitch motor","TopLayer","HEADER-1X2","410.000","990.000","90","Header, 2-Pin",""
+"U4","MIC7221YM5","TopLayer","MIC7221YM5","1300.000","1175.000","90","Comparator General Purpose Open Drain SOT-23-5",""
+"D3","BAT54CLT1G","TopLayer","SOT23-DUODIODE","1460.000","1420.500","360","DUAL SCHOTTKY DIODE COMMON CATHODE","C14308"
+"R8","3.3K","TopLayer","6-0805_N","1040.000","1515.000","0","Resistor","C26010"
