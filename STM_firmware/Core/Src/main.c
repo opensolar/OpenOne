@@ -110,7 +110,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_GPIO_TogglePin(BLUE_LED_GPIO_Port, BLUE_LED_Pin);
-    HAL_Delay(1000);
+    HAL_Delay(500);
 
     pitch.speed = speed;
     drive_pitch_motor(&pitch);
