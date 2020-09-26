@@ -8,11 +8,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "motor.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include "motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,9 +33,20 @@
 ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
+SPI_HandleTypeDef hspi1;
+DMA_HandleTypeDef hdma_spi1_rx;
+DMA_HandleTypeDef hdma_spi1_tx;
+
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
+
+uint8_t spi_tx_data[sizeof(SPI_TX_FRAME)];
+SPI_TX_FRAME txFrame;
+
+uint8_t spi_rx_data[sizeof(SPI_RX_FRAME)];
+uint32_t spi_rx_count;
+SPI_RX_FRAME rxFrame;
 
 /* USER CODE END PV */
 
@@ -45,6 +56,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -85,23 +97,42 @@ int main(void)
   MX_DMA_Init();
   MX_ADC_Init();
   MX_TIM2_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  txFrame.hall[0] = 10;
+  txFrame.hall[1] = 1000;
+  txFrame.hall[2] = 10000;
+  txFrame.hall[3] = 0xffff;
+  txFrame.status = 0xcafe;
+  memcpy(spi_tx_data, &txFrame, sizeof(SPI_TX_FRAME));
+
   setPWM(TIM_CHANNEL_1, 32000, 32767);
   setPWM(TIM_CHANNEL_2, 32000, 8000);
+
+  //HAL_SPI_Receive_DMA(&hspi1, spi_rx_data, sizeof(SPI_RX_FRAME));
+  HAL_SPI_TransmitReceive_DMA(&hspi1, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME));
+
+
+  // if(sizeof(SPI_TX_FRAME) == sizeof(SPI_RX_FRAME)){
+
+    //  }
+  //HAL_SPI_Transmit_DMA(&hspi1, spi_tx_data, sizeof(SPI_TX_FRAME));
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+
+
   HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
 
 
-  MOTOR roll = {CW, 32768};
-
-
-  MOTOR pitch = {CCW, 0};
-  uint16_t speed = 0;
-
+  //MOTOR roll = {CW, 0, 32768};
+  //MOTOR pitch = {CCW, 0, 0};
+  //uint16_t speed = 0;
+  HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
   while (1)
   {
 
@@ -110,12 +141,13 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_GPIO_TogglePin(BLUE_LED_GPIO_Port, BLUE_LED_Pin);
+    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
     HAL_Delay(500);
 
-    pitch.speed = speed;
-    drive_pitch_motor(&pitch);
-    drive_roll_motor(&roll);
-    speed += 1024;
+    //pitch.speed = speed;
+    //drive_pitch_motor(&pitch);
+    //drive_roll_motor(&roll);
+    //speed += 1024;
 
 
 
@@ -240,6 +272,43 @@ static void MX_ADC_Init(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_SLAVE;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief TIM2 Initialization Function
   * @param None
   * @retval None
@@ -315,6 +384,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 
 }
 
@@ -333,40 +405,26 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, PITCH_CTL1_Pin|PITCH_CTL2_Pin|ROLL_CTL2_Pin|ROLL_CTL1_Pin
-                          |RED_LED_Pin|BLUE_LED_Pin, GPIO_PIN_RESET);
+                          |RED_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, MOTOR_STBY_Pin|BLUE_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PITCH_CTL1_Pin PITCH_CTL2_Pin ROLL_CTL2_Pin ROLL_CTL1_Pin
-                           RED_LED_Pin BLUE_LED_Pin */
+                           RED_LED_Pin */
   GPIO_InitStruct.Pin = PITCH_CTL1_Pin|PITCH_CTL2_Pin|ROLL_CTL2_Pin|ROLL_CTL1_Pin
-                          |RED_LED_Pin|BLUE_LED_Pin;
+                          |RED_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MOTOR_STBY_Pin */
-  GPIO_InitStruct.Pin = MOTOR_STBY_Pin;
+  /*Configure GPIO pins : MOTOR_STBY_Pin BLUE_LED_Pin */
+  GPIO_InitStruct.Pin = MOTOR_STBY_Pin|BLUE_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(MOTOR_STBY_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB3 PB4 PB5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF0_SPI1;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SPI_SS_Pin */
-  GPIO_InitStruct.Pin = SPI_SS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SPI_SS_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -383,6 +441,20 @@ void setPWM(uint32_t channel, uint16_t period, uint16_t pulse){
  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
  HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, channel);
  HAL_TIM_PWM_Start(&htim2, channel); // start pwm generation
+}
+
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
+  if(hspi->Instance == SPI1){
+    spi_rx_count++;
+    //HAL_SPI_DMAStop(hspi);
+    memcpy((void *)&rxFrame, (void *)spi_rx_data, sizeof(SPI_RX_FRAME));
+    // copy tx data
+
+
+   // HAL_SPI_DMAResume(hspi);
+
+  }
 }
 
 

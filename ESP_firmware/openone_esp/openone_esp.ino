@@ -2,15 +2,39 @@
 //  _____   _____  _______ __   _ _______  _____         _______  ______   _____  _____ 
 // |     | |_____] |______ | \  | |______ |     | |      |_____| |_____/     |   |     |
 // |_____| |       |______ |  \_| ______| |_____| |_____ |     | |    \_ . __|__ |_____|
-                                                                                      
+
+// Copyright (C) 2020 opensolar
+// Author: Martin Lafleur (mlafleur@opensolar.io)
+// Date: Sep 2020
+// Project: OpenOne
+// Description: ESP8266 code for OpenOne
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <SPI.h>
 
-// Update these with values suitable for your network.
+const int GPIO_SS = 15; 
+const int NB_HALLS = 4;
+enum motor_modes { BRAKE = 0, CW = 1, CCW = 2, COAST = 3};
+
+typedef struct{
+  uint8_t mode; // see motor_modes enum
+  uint8_t spare;
+  uint16_t speed;   // 65535 = 99.9%
+  
+} MOTOR;
+
+typedef struct{
+  uint8_t digit[2];
+  uint8_t bits;
+  uint8_t spare;
+} CONTROL;
+enum control_bits { SPARE1 = 0x02, STANDBY = 0x01 };
+
+
 
 const char* ssid = "laflaulac";
-const char* password = "pwd";
+const char* password = "9876543210";
 const char* mqtt_server = "192.168.0.200";
 
 WiFiClient espClient;
@@ -91,17 +115,18 @@ void reconnect() {
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
+  spiBegin();
+  //setup_wifi();
+  //client.setServer(mqtt_server, 1883);
+  //client.setCallback(callback);
 }
 
 void loop() {
 
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
+  //if (!client.connected()) {
+  //  reconnect();
+  //}
+  //client.loop();
 
   unsigned long now = millis();
   if (now - lastMsg > 2000) {
@@ -110,6 +135,10 @@ void loop() {
     snprintf (msg, MSG_BUFFER_SIZE, "hello world %ld", value);
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish("opensolar", msg);
+    //client.publish("opensolar", msg);
+
+    execute_spi_transaction();
+    
+    
   }
 }

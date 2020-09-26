@@ -42,12 +42,14 @@ enum motor_modes { BRAKE = 0, CW = 1, CCW = 2, COAST = 3};
 
 typedef struct{
   uint8_t mode; // see motor_modes enum
+  uint8_t spare;
   uint16_t speed;   // 65535 = 99.9%
 } MOTOR;
 
 typedef struct{
   uint8_t digit[2];
   uint8_t bits;
+  uint8_t spare;
 } CONTROL;
 enum control_bits { SPARE1 = 0x02, STANDBY = 0x01 };
 
@@ -60,6 +62,7 @@ typedef struct {
 typedef struct{
   uint16_t hall[4];
   uint16_t status;
+  uint16_t spare;
 } SPI_TX_FRAME;
 
 /* USER CODE END ET */
@@ -109,10 +112,8 @@ void setPWM(uint32_t channel, uint16_t period, uint16_t pulse);
 #define ROLL_CTL1_GPIO_Port GPIOA
 #define RED_LED_Pin GPIO_PIN_12
 #define RED_LED_GPIO_Port GPIOA
-#define BLUE_LED_Pin GPIO_PIN_15
-#define BLUE_LED_GPIO_Port GPIOA
-#define SPI_SS_Pin GPIO_PIN_6
-#define SPI_SS_GPIO_Port GPIOB
+#define BLUE_LED_Pin GPIO_PIN_6
+#define BLUE_LED_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
