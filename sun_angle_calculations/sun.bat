@@ -1,0 +1,2 @@
+python sun.py
+pause
