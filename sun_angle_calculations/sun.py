@@ -25,20 +25,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import date
 
+# returns the number of days elapsed since January 1st 2020
 def get_days_elapsed(d):
     delta = d - date(2020, 1, 1)
     return delta.days
 
+# returns the declination angle of the earth in radians
 def get_declination(day = 173):
     x = (360/365)*(day+11)
     deg = -23.45*np.cos(np.pi * x / 180.0)
     return np.pi * deg / 180.0
 
-
+# returns the elevation angle of the sun in radians in radians
 # days: number of days since january 1st (173 is the summer solstice)
 # latitude: in degrees (montreal, canada is 45.5)
 # hour: 0 to 23 (time of day, noon is 12)
-def get_elevation(day = 173, latitude = 45.763969, hour = 12.0):
+def get_elevation(day = 173, latitude = 45.5, hour = 12.0):
     declination = get_declination(day)
 
     lat_angle = np.pi * latitude / 180.0
@@ -55,6 +57,8 @@ def get_elevation(day = 173, latitude = 45.763969, hour = 12.0):
     
     return elevation
     
+#returns the azimuth angle of the sun in radians (pi is south)
+# does not take into account the relative distance 
 def get_azimuth(day = 173, latitude = 45.78, hour = 12.0):
     declination = get_declination(day)
     lat_angle = np.pi * latitude / 180.0
@@ -84,6 +88,20 @@ def get_excentricity_correction(day):
     eot = (9.87 * np.sin(2*b) - 7.53 * np.cos(b) - 1.5 * np.sin(b))/ 60.0
     return eot
 
+# returns the time correction due to the position relative to the meridian
+# for eastern time, the meridian is -75 deg
+def get_meridional_correction(longitude, meridian = -75.0):
+    # The earth is divided in 24 time zones, hence 360° / 24 = 15
+    return (longitude - meridian) / 15.0 # in h
+
+
+
+latitude = 45.78 #Saint-Jerome
+longitude = -74.03 #Saint-Jerome
+#longitude = -61.25 #Kegaska
+#longitude = -89.28 #Thunderbay
+
+#Prepare a plot of elevation vs azimuth angles for selected dates and a  point for each hour from 6h to 18h
 dates = [
     date(2019,12,21),
     date(2020,1,20), 
@@ -94,18 +112,10 @@ dates = [
     date(2020,6,20)
 ]
 
-latitude = 45.78 #Saint-Jerome
-longitude = -74.03 #Saint-Jerome
-#longitude = -61.25 #Kegaska
-#longitude = -89.28 #Thunderbay
-
-meridian = -75
-meridian_correction = (longitude - meridian) / 15.0 # in h
-
 for d in dates:
     elapsed = get_days_elapsed(d)
-    correction_factor  = meridian_correction + get_excentricity_correction(elapsed)
-    
+    correction_factor  = get_meridional_correction(longitude) + get_excentricity_correction(elapsed)
+
     elevations = []
     azimuths = []
     for h in range(6,19):
@@ -123,16 +133,16 @@ for d in dates:
     plt.plot(azimuths, elevations, label = "elevation for " + str(d), marker = ".")
     
     
-
+#Prepare a plot of elevation vs azimuth angles (analemma) for every day of the year, for each hour from 6h to 18h
 for h in range(6,19):
     elevations = []
     azimuths = []
     for d in range(365):
-        correction_factor  = meridian_correction + get_excentricity_correction(d)
-        elevation_deg = 180.0 * get_elevation(hour = h - correction_factor, day = d) / np.pi
+        correction_factor  = get_meridional_correction(longitude) + get_excentricity_correction(d)
+        elevation_deg = 180.0 * get_elevation(hour = h - correction_factor, day = d, latitude = latitude) / np.pi
         elevations.append(elevation_deg)
         
-        azimuth_deg = 180.0 * get_azimuth(hour = h - correction_factor, day = d) / np.pi
+        azimuth_deg = 180.0 * get_azimuth(hour = h - correction_factor, day = d, latitude = latitude) / np.pi
         azimuths.append(azimuth_deg)
 
     if h == 6 or h ==18:
@@ -150,54 +160,29 @@ plt.show()
 
 
 
+#Analemma for different cities
 
-
-
-
-
-
-
-
-
-#Analemma
-
-elevations = []
-azimuths = []
+cities = (("Montreal", 45.5, -73.6),("Quebec", 46.8, -71.4), ("Chicoutimi", 48.4, -70.1))
 h = 13
 
-dates = [
-    date(2019,12,21),
-    date(2020,1,20), 
-    date(2020,2,20),
-    date(2020,3,19),
-    date(2020,4,20),
-    date(2020,5,21),
-    date(2020,6,20),
-    date(2020,7,20),
-    date(2020,8,20),
-    date(2020,9,20),
-    date(2020,10,20),
-    date(2020,11,20)
-    
-]
+for city in cities:
+    elevations = []
+    azimuths = []
+    for d in range(0,366, 5):
+        #elapsed = get_days_elapsed(d)
+        elapsed = d
+        correction_factor  = get_meridional_correction(city[2]) + get_excentricity_correction(d)
+        elevation_deg = 180.0 * get_elevation(hour = h - correction_factor, day = elapsed, latitude = city[1]) / np.pi
+        elevations.append(elevation_deg)
+        
+        azimuth_deg = 180.0 * get_azimuth(hour = h - correction_factor, day = elapsed, latitude = city[1]) / np.pi
+        azimuths.append(azimuth_deg)
 
-for d in range(0,365, 5):
-    #elapsed = get_days_elapsed(d)
-    elapsed = d
-    correction_factor  = meridian_correction + get_excentricity_correction(d)
-    elevation_deg = 180.0 * get_elevation(hour = h - correction_factor, day = elapsed) / np.pi
-    elevations.append(elevation_deg)
-    
-    azimuth_deg = 180.0 * get_azimuth(hour = h - correction_factor, day = elapsed) / np.pi
-    azimuths.append(azimuth_deg)
-
-    if len(elevations) >= 2:
-        #plt.plot(azimuths[-2:], elevations[-2:], label = "elevation ending " + str(d), marker = ".")
-        plt.plot(azimuths[-2:], elevations[-2:], marker = ".")        
+    plt.plot(azimuths, elevations, label = city[0], marker = ".")        
 
 plt.xlabel('azimuth angle (deg)')
 plt.ylabel('elevation angle (deg)')
-plt.title('Analemma longitude = ' + str(longitude) + ' latitude = ' + str(latitude) + ' time = ' + str(h))
+plt.title('Analemma for different cities, time = ' + str(h) + ' h')
 plt.grid(True)
 plt.legend()
-plt.show()
+plt.show() 
