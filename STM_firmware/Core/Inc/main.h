@@ -88,12 +88,12 @@ void setPWM(uint32_t channel, uint16_t period, uint16_t pulse);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define HALL0_Pin GPIO_PIN_0
-#define HALL0_GPIO_Port GPIOA
-#define HALL1_Pin GPIO_PIN_1
-#define HALL1_GPIO_Port GPIOA
-#define HALL2_Pin GPIO_PIN_4
+#define HALL4_Pin GPIO_PIN_0
+#define HALL4_GPIO_Port GPIOA
+#define HALL2_Pin GPIO_PIN_1
 #define HALL2_GPIO_Port GPIOA
+#define HALL1_Pin GPIO_PIN_4
+#define HALL1_GPIO_Port GPIOA
 #define HALL3_Pin GPIO_PIN_5
 #define HALL3_GPIO_Port GPIOA
 #define PITCH_CTL1_Pin GPIO_PIN_6

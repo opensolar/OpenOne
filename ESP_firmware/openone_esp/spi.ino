@@ -3,11 +3,28 @@
 // |     | |_____] |______ | \  | |______ |     | |      |_____| |_____/     |   |     |
 // |_____| |       |______ |  \_| ______| |_____| |_____ |     | |    \_ . __|__ |_____|
 
-// Copyright (C) 2020 opensolar
 // Author: Martin Lafleur (mlafleur@opensolar.io)
 // Date: Sep 2020
 // Project: OpenOne
-
+//
+// Copyright 2020 opensolar.io
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
+// associated documentation files (the "Software"), to deal in the Software without restriction, 
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, 
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software 
+// is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in 
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//    
 
 typedef struct {
   MOTOR motor[2];
@@ -100,6 +117,8 @@ void execute_spi_transaction(){
 
   Serial.print("halls: ");
   for(int i = 0; i < NB_HALLS; i++){
+      //uint32_t mv = 3000 * rxFrame.hall[i] / 4096;
+      //Serial.print(String(mv)+ " ");
       Serial.print(String(rxFrame.hall[i])+ " ");
   }
   Serial.print("\n");

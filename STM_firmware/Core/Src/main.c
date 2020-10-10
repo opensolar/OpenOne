@@ -48,6 +48,9 @@ uint8_t spi_rx_data[sizeof(SPI_RX_FRAME)];
 uint32_t spi_rx_count;
 SPI_RX_FRAME rxFrame;
 
+#define NB_ADC_CHANNELS  4
+
+uint16_t adc_buffer[NB_ADC_CHANNELS];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,6 +102,9 @@ int main(void)
   MX_TIM2_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_ADC_Start_DMA(&hadc, (uint32_t*)adc_buffer, NB_ADC_CHANNELS); // Start ADC in DMA
+
   txFrame.hall[0] = 10;
   txFrame.hall[1] = 1000;
   txFrame.hall[2] = 10000;
@@ -108,16 +114,7 @@ int main(void)
 
   setPWM(TIM_CHANNEL_1, 32000, 32767);
   setPWM(TIM_CHANNEL_2, 32000, 8000);
-
-  //HAL_SPI_Receive_DMA(&hspi1, spi_rx_data, sizeof(SPI_RX_FRAME));
   HAL_SPI_TransmitReceive_DMA(&hspi1, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME));
-
-
-  // if(sizeof(SPI_TX_FRAME) == sizeof(SPI_RX_FRAME)){
-
-    //  }
-  //HAL_SPI_Transmit_DMA(&hspi1, spi_tx_data, sizeof(SPI_TX_FRAME));
-
 
   /* USER CODE END 2 */
 
@@ -141,7 +138,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_GPIO_TogglePin(BLUE_LED_GPIO_Port, BLUE_LED_Pin);
-    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+    //HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
     HAL_Delay(500);
 
     //pitch.speed = speed;
@@ -217,16 +214,16 @@ static void MX_ADC_Init(void)
   */
   hadc.Instance = ADC1;
   hadc.Init.OversamplingMode = DISABLE;
-  hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc.Init.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  hadc.Init.SamplingTime = ADC_SAMPLETIME_39CYCLES_5;
   hadc.Init.ScanConvMode = ADC_SCAN_DIRECTION_FORWARD;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc.Init.DMAContinuousRequests = DISABLE;
+  hadc.Init.DMAContinuousRequests = ENABLE;
   hadc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc.Init.LowPowerAutoWait = DISABLE;
@@ -451,6 +448,13 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
     memcpy((void *)&rxFrame, (void *)spi_rx_data, sizeof(SPI_RX_FRAME));
     // copy tx data
 
+
+    txFrame.hall[0] = adc_buffer[0];
+    txFrame.hall[1] = adc_buffer[1];
+    txFrame.hall[2] = adc_buffer[2];
+    txFrame.hall[3] = adc_buffer[3];
+    txFrame.status = 0xcafe;
+    memcpy(spi_tx_data, &txFrame, sizeof(SPI_TX_FRAME));
 
    // HAL_SPI_DMAResume(hspi);
 
