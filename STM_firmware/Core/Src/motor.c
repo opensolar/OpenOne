@@ -9,10 +9,20 @@
 
 
 TIM_HandleTypeDef htim2;
+void enable_motors(bool enable){
+
+  if(enable){
+    HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
+  }
+
+}
+
 
 
 void drive_roll_motor(MOTOR *mot){
-  uint16_t period = 32000;
+  uint16_t period = 65535;
   uint16_t pulse = (uint32_t)period * mot->speed / 65536;
 
   switch(mot->mode){

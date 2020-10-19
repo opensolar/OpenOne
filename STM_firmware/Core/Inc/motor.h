@@ -10,5 +10,6 @@
 
 void drive_pitch_motor(MOTOR *mot);
 void drive_roll_motor(MOTOR *mot);
+void enable_motors(bool enable);
 
 #endif /* INC_MOTOR_H_ */

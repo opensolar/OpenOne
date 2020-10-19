@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      .button {
+        padding: 15px 25px;
+        font-size: 24px;
+        text-align: center;
+        cursor: pointer;
+        outline: none;
+        color: #fff;
+        background-color: #4CAF50;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 9px #999;
+        width: 100px;
+        margin: auto; 
+      }
+      
+      .button:hover {background-color: #3e8e41}
+      
+      .button:active {
+        background-color: #3e8e41;
+        box-shadow: 0 5px #666;
+        transform: translateY(4px);
+      }
+      </style>
+    <title>OpenSolar OpenOne manual interface</title>
+  </head>
+  <body>
+    <h1>OpenOne</h1>
+    <p id="timeLabel">time</p>
+
+    <button style="position:relative; left: 60px;" class="button" onmousedown="increase_pitch()" onmouseup="stop()">&uarr;</button><br><br>
+    <button style="position:relative; left: 0px;" class="button" onmousedown="decrease_roll()" onmouseup="stop()">&larr;</button>
+    <button style="position:relative; left: 20px;" class="button" onmousedown="increase_roll()" onmouseup="stop()">&rarr;</button><br><br>
+    <button style="position:relative; left: 60px;" class="button" onmousedown="decrease_pitch()" onmouseup="stop()">&darr;</button>
+    <script>
+    'use strict'
+    function timeListener (data) {
+        document.getElementById("timeLabel").innerHTML =  this.responseText;
+    }
+    function stop(){
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "/stop");
+        oReq.send();
+    }    
+
+    function increase_pitch(){
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "/increase_pitch");
+        oReq.send();
+    }
+    function decrease_pitch(){
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "/decrease_pitch");
+        oReq.send();
+    }
+    function increase_roll(){
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "/increase_roll");
+        oReq.send();
+    }
+    function decrease_roll(){
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "/decrease_roll");
+        oReq.send();
+    }
+
+    setInterval(function () {
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", timeListener);
+        oReq.open("GET", "/time");
+        oReq.send();
+    }, 1000);
+
+    </script>
+  </body>
+</html>

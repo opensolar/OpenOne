@@ -37,8 +37,8 @@ typedef struct{
   uint16_t spare;
 } SPI_RX_FRAME;
 
-const int SPI_BUFFER_SIZE = sizeof(SPI_TX_FRAME);
-
+//const int SPI_BUFFER_SIZE = sizeof(SPI_TX_FRAME);
+const int SPI_BUFFER_SIZE = 12;
 
 uint8_t txData[SPI_BUFFER_SIZE];
 uint8_t rxData[SPI_BUFFER_SIZE];    
@@ -76,7 +76,7 @@ bool writeData(const uint8_t * tx, size_t txLength) {
     Serial.println("error SPI frame too large\n");
     return false;
   }
-  Serial.println("tx size:" + String(txLength));
+  //Serial.println("tx size:" + String(txLength));
 
   memset(txData, 0, SPI_BUFFER_SIZE);
   memcpy(txData, tx, txLength);
@@ -84,7 +84,7 @@ bool writeData(const uint8_t * tx, size_t txLength) {
   digitalWrite(GPIO_SS, LOW);
   SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
   
-  delayMicroseconds(50); // must be lower than the ST interrupt latency
+  delayMicroseconds(100); // must be lower than the ST interrupt latency
   
   for(int i = 0; i < SPI_BUFFER_SIZE; i++){
     rxData[i] = SPI.transfer(txData[i]);  
@@ -96,31 +96,26 @@ bool writeData(const uint8_t * tx, size_t txLength) {
   return true;
 }
 
-void execute_spi_transaction(){
-  MOTOR roll = { CW, 0, 32768};
-  MOTOR pitch = { CCW, 0, 7};
-  CONTROL control = { 1,2,0};
+void execute_spi_transaction(MOTOR *roll, MOTOR *pitch, CONTROL *control){
+  //MOTOR roll = { CW, 0, 32768};
+  //MOTOR pitch = { CCW, 0, 7};
+  //CONTROL control = { 1,2,0};
   SPI_TX_FRAME txFrame;
-  memcpy(&txFrame.motor[0], &roll, sizeof(MOTOR));
-  memcpy(&txFrame.motor[1], &pitch, sizeof(MOTOR));
-  memcpy(&txFrame.st_control, &control, sizeof(CONTROL));
-  //txFrame.motor[0] = roll;
-  //txFrame.motor[1] = pitch;
-  //txFrame.st_control = control;
-  //Serial.println("Roll speed:" + String(txFrame.motor[0].speed));
-
+  memcpy(&txFrame.motor[0], roll, sizeof(MOTOR));
+  memcpy(&txFrame.motor[1], pitch, sizeof(MOTOR));
+  memcpy(&txFrame.st_control, control, sizeof(CONTROL));
 
   writeData((const uint8_t *)&txFrame, sizeof(SPI_TX_FRAME)); 
 
   SPI_RX_FRAME rxFrame;
   memcpy((void *)&rxFrame, (void *)rxData, sizeof(SPI_RX_FRAME));
 
-  Serial.print("halls: ");
-  for(int i = 0; i < NB_HALLS; i++){
+  //Serial.print("halls: ");
+  //for(int i = 0; i < NB_HALLS; i++){
       //uint32_t mv = 3000 * rxFrame.hall[i] / 4096;
       //Serial.print(String(mv)+ " ");
-      Serial.print(String(rxFrame.hall[i])+ " ");
-  }
-  Serial.print("\n");
-  Serial.println("ST status:" + String(rxFrame.st_status));
+  //    Serial.print(String(rxFrame.hall[i])+ " ");
+ // }
+ // Serial.print("\n");
+  //Serial.println("ST status:" + String(rxFrame.st_status));
 }

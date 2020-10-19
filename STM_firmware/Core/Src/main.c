@@ -40,6 +40,7 @@ DMA_HandleTypeDef hdma_spi1_tx;
 TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
+bool communication_ok = false;
 
 uint8_t spi_tx_data[sizeof(SPI_TX_FRAME)];
 SPI_TX_FRAME txFrame;
@@ -114,7 +115,12 @@ int main(void)
 
   setPWM(TIM_CHANNEL_1, 32000, 32767);
   setPWM(TIM_CHANNEL_2, 32000, 8000);
+
+  //while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) != GPIO_PIN_SET); // CS signal
+
+  while(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
   HAL_SPI_TransmitReceive_DMA(&hspi1, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME));
+
 
   /* USER CODE END 2 */
 
@@ -122,14 +128,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
 
+  //HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
 
-  HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
+  // show the system reset by blinking the blue led fast
+  for(int i = 0; i < 10 ; i++){
+    HAL_GPIO_TogglePin(BLUE_LED_GPIO_Port, BLUE_LED_Pin);
+    HAL_Delay(100);
+  }
 
 
-  //MOTOR roll = {CW, 0, 32768};
-  //MOTOR pitch = {CCW, 0, 0};
-  //uint16_t speed = 0;
-  HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
   while (1)
   {
 
@@ -138,13 +145,19 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     HAL_GPIO_TogglePin(BLUE_LED_GPIO_Port, BLUE_LED_Pin);
-    //HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
-    HAL_Delay(500);
 
-    //pitch.speed = speed;
-    //drive_pitch_motor(&pitch);
-    //drive_roll_motor(&roll);
-    //speed += 1024;
+
+    communication_ok = false;
+    HAL_Delay(500);
+    enable_motors(communication_ok);
+
+
+
+
+
+
+    drive_roll_motor(&rxFrame.motor[0]);
+    drive_pitch_motor(&rxFrame.motor[1]);
 
 
 
@@ -442,13 +455,12 @@ void setPWM(uint32_t channel, uint16_t period, uint16_t pulse){
 
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
+  static uint8_t  lastWatchdog = 0;
   if(hspi->Instance == SPI1){
     spi_rx_count++;
     //HAL_SPI_DMAStop(hspi);
     memcpy((void *)&rxFrame, (void *)spi_rx_data, sizeof(SPI_RX_FRAME));
     // copy tx data
-
-
     txFrame.hall[0] = adc_buffer[0];
     txFrame.hall[1] = adc_buffer[1];
     txFrame.hall[2] = adc_buffer[2];
@@ -456,12 +468,37 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
     txFrame.status = 0xcafe;
     memcpy(spi_tx_data, &txFrame, sizeof(SPI_TX_FRAME));
 
-   // HAL_SPI_DMAResume(hspi);
+
+    // initialize lastWachdog only at startup
+    if(lastWatchdog == 0 && (rxFrame.control.watchdog == 0x55 || rxFrame.control.watchdog == 0xAA)){
+      lastWatchdog = rxFrame.control.watchdog == 0x55 ? 0xAA : 0x55;
+    }
+
+    if(rxFrame.control.watchdog == 0x55){
+      communication_ok = lastWatchdog == 0xAA;
+      lastWatchdog = rxFrame.control.watchdog;
+    } else if(rxFrame.control.watchdog == 0xAA){
+      communication_ok = lastWatchdog == 0x55;
+      lastWatchdog = rxFrame.control.watchdog;
+    } else {
+      // data is not in sync, reset STM
+      communication_ok = false;
+      NVIC_SystemReset();
+    }
+
+
 
   }
 }
 
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
+  if(hspi->Instance == SPI1){
+    while(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
+    HAL_SPI_TransmitReceive_DMA(&hspi1, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME));
+    HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
+  }
 
+}
 
 /* USER CODE END 4 */
 

@@ -1,4 +1,3 @@
-
 //  _____   _____  _______ __   _ _______  _____         _______  ______   _____  _____ 
 // |     | |_____] |______ | \  | |______ |     | |      |_____| |_____/     |   |     |
 // |_____| |       |______ |  \_| ______| |_____| |_____ |     | |    \_ . __|__ |_____|
@@ -29,6 +28,8 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <SPI.h>
+#include <ArduinoJson.h>
+#include "credentials.h"
 
 const int GPIO_SS = 15; 
 const int NB_HALLS = 4;
@@ -38,21 +39,16 @@ typedef struct{
   uint8_t mode; // see motor_modes enum
   uint8_t spare;
   uint16_t speed;   // 65535 = 99.9%
-  
 } MOTOR;
 
 typedef struct{
   uint8_t digit[2];
   uint8_t bits;
-  uint8_t spare;
+  uint8_t watchdog;
 } CONTROL;
 enum control_bits { SPARE1 = 0x02, STANDBY = 0x01 };
 
 
-
-const char* ssid = "laflaulac";
-const char* password = "9876543210";
-const char* mqtt_server = "192.168.0.200";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -60,6 +56,10 @@ unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE  (50)
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
+
+static MOTOR roll;
+static MOTOR pitch;
+static CONTROL ctrl;
 
 void setup_wifi() {
 
@@ -85,7 +85,7 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void mqtt_on_message(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
@@ -93,15 +93,44 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print((char)payload[i]);
   }
   Serial.println();
-
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
+  
+  MOTOR *motor;
+  if(((String)topic).indexOf("pitch") != -1){
+    motor = &pitch;
+  } else if(((String)topic).indexOf("roll") != -1){
+    motor = &roll;
   } else {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+    Serial.println("Error: no motor is found in topic");
+    return;
   }
+  
+  StaticJsonDocument<64> doc;
+  //{"speed": 65535, "mode":"CCW"}
+  //if(topic == pitch)
+  DeserializationError error = deserializeJson(doc, payload);
+  // Test if parsing succeeds.
+  if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.c_str());
+    return;
+  }
+  motor->speed = doc["speed"];
+  const String mode = doc["mode"];
+  
+  if(mode == "CCW"){
+    motor->mode = CCW;
+  } else if(mode == "CW"){
+    motor->mode = CW;
+  } else if(mode == "BRAKE"){
+    motor->mode = BRAKE;
+  } else if(mode == "COAST"){
+    motor->mode = COAST;
+  } else {
+    Serial.println("Error: motor mode is not supported");
+    motor->mode = COAST;
+  }
+  
+  
 
 }
 
@@ -116,9 +145,9 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("opensolar", "hello world");
+      //client.publish("opensolar", "hello world");
       // ... and resubscribe
-      client.subscribe("opensolar_todevice");
+      client.subscribe("openone/#");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -133,28 +162,70 @@ void setup() {
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);
   spiBegin();
-  //setup_wifi();
-  //client.setServer(mqtt_server, 1883);
-  //client.setCallback(callback);
+  
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(mqtt_on_message);
 }
+
+
+
+
 
 void loop() {
 
-  //if (!client.connected()) {
-  //  reconnect();
-  //}
-  //client.loop();
+  if (!client.connected()) {
+    roll.mode = COAST;
+    pitch.mode = COAST;
+    reconnect();
+  }
+  client.loop();
 
+  ctrl.digit[0] = 11;
+  ctrl.digit[1] = 22;
+  ctrl.bits = 0x80;
+   
+  
   unsigned long now = millis();
-  if (now - lastMsg > 2000) {
+  if (now - lastMsg> 100) {
     lastMsg = now;
-    ++value;
-    snprintf (msg, MSG_BUFFER_SIZE, "hello world %ld", value);
-    Serial.print("Publish message: ");
-    Serial.println(msg);
+    ++value; 
+    //snprintf (msg, MSG_BUFFER_SIZE, "hello world %ld", value);
+    //Serial.print("Publish message: ");
+    //Serial.println(msg);
     //client.publish("opensolar", msg);
 
-    execute_spi_transaction();
+//    if(value % 256 < 64){
+//      pitch.speed = 65535;
+//      pitch.mode = CW;
+//      roll.speed = 0;
+//    } else if(value % 256 < 128){
+//      pitch.speed = 50000;
+//      pitch.mode = CCW;
+//      roll.speed = 0;
+//    } else if(value % 256 < 192){
+//      roll.speed = 40000;
+//      roll.mode = CW;
+//      pitch.speed = 0;
+//    } else {
+//      roll.speed = 30000;
+//      roll.mode = CCW;
+//      pitch.speed = 0;
+//    }
+
+
+    if((value % 256 == 0) || (value % 256 == 64) || (value % 256 == 128) || (value % 256 == 192)){
+      Serial.println("pitch speed:" + String(pitch.speed) + " mode:" + String(pitch.mode));
+      Serial.println("roll speed:" + String(roll.speed) + " mode:" + String(roll.mode));
+    }
+    
+    if(value % 2){
+      ctrl.watchdog =0x55;
+    } else {
+      ctrl.watchdog =0xAA;
+    }
+    
+    execute_spi_transaction(&roll, &pitch, &ctrl);
     
     
   }
