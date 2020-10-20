@@ -1,35 +1,9 @@
 'use strict';
 var express = require('express');
 var app = express();
-
-//const app = require('express')();
-//const http = require('http').createServer(app);
 const mqtt = require('mqtt');
 const client = mqtt.connect('mqtt://192.168.0.200');
 var _count = 0;
-
-function forward(){
-    client.publish('openone/pitch', '{"speed": 65535, "mode":"CW"}')
-    console.log('sending forward')
-    _count++;
-    if(_count < 5){
-        setTimeout(reverse, 2000);
-    } else {
-        stop();
-    }
-}
-
-function reverse(){
-    client.publish('openone/pitch', '{"speed": 65535, "mode":"CCW"}')
-    console.log('sending reverse')
-    setTimeout(forward, 2000);
-}
-
-
-function stop(){
-    client.publish('openone/pitch', '{"speed": 0, "mode":"COAST"}')
-    console.log('sending pitch stop')    
-}
 
 
 client.on('connect', () => {
