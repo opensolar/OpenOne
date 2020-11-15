@@ -2,9 +2,10 @@
 var express = require('express');
 var app = express();
 const mqtt = require('mqtt');
+const url = require('url')
 const client = mqtt.connect('mqtt://192.168.0.200');
 var _count = 0;
-
+var motor_speed = 32768;
 
 client.on('connect', () => {
    // Inform controllers that garage is connected
@@ -29,24 +30,32 @@ app.get('/stop', function(req, res){
 
 app.get('/increase_pitch', function(req, res){
     console.log("increasing pitch");
-    client.publish('openone/pitch', '{"speed": 65535, "mode":"CW"}');
+    client.publish('openone/pitch', '{"speed": ' + motor_speed.toString() + ', "mode":"CW"}');
     res.send("");
 });
 
 app.get('/decrease_pitch', function(req, res){
     console.log("decreasing pitch");
-    client.publish('openone/pitch', '{"speed": 65535, "mode":"CCW"}');
+    client.publish('openone/pitch', '{"speed": ' + motor_speed.toString() + ', "mode":"CCW"}');
     res.send("");
 });
 
 app.get('/increase_roll', function(req, res){
     console.log("increasing roll");
-    client.publish('openone/roll', '{"speed": 65535, "mode":"CW"}');
+    client.publish('openone/roll', '{"speed": ' + motor_speed.toString() + ', "mode":"CW"}');
     res.send("");
 });
 app.get('/decrease_roll', function(req, res){
     console.log("decreasing roll");
-    client.publish('openone/roll', '{"speed": 65535, "mode":"CCW"}');
+    client.publish('openone/roll', '{"speed": ' + motor_speed.toString() + ', "mode":"CCW"}');
+    res.send("");
+});
+
+
+app.get('/set_speed', function(req, res){
+    
+    console.log("set speed to " + req.query.speed);
+    motor_speed = 65535 * req.query.speed / 100;
     res.send("");
 });
 

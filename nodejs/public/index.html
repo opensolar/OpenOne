@@ -36,8 +36,27 @@
     <button style="position:relative; left: 0px;" class="button" onmousedown="decrease_roll()" onmouseup="stop()">&larr;</button>
     <button style="position:relative; left: 20px;" class="button" onmousedown="increase_roll()" onmouseup="stop()">&rarr;</button><br><br>
     <button style="position:relative; left: 60px;" class="button" onmousedown="decrease_pitch()" onmouseup="stop()">&darr;</button>
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <div class="slidecontainer">
+      <input type="range" min="0" max="100" value="50" class="slider" id="speed">
+      <p>Vitesse: <span id="display_speed"></span></p>
+    </div>
+
+    
     <script>
     'use strict'
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+
+    var slider = document.getElementById("speed");
+    var output = document.getElementById("display_speed");
+    output.innerHTML = slider.value; // Display the default slider value
+
+
     function timeListener (data) {
         document.getElementById("timeLabel").innerHTML =  this.responseText;
     }
@@ -66,6 +85,38 @@
         var oReq = new XMLHttpRequest();
         oReq.open("GET", "/decrease_roll");
         oReq.send();
+    }
+
+
+    slider.oninput = function() {
+      output.innerHTML = this.value;
+      var oReq = new XMLHttpRequest();
+        oReq.open("GET", "/set_speed?speed=" + this.value);
+        oReq.send();
+
+    }
+
+    function onKeyUp(){
+      stop();
+    }
+
+    function onKeyDown(e){
+        //alert(e.code);
+
+        switch(e.code){
+          case "ArrowLeft":
+            decrease_roll();
+            break;
+          case "ArrowRight":
+            increase_roll();
+            break;
+          case "ArrowUp":
+            increase_pitch();
+            break;
+          case "ArrowDown":
+            decrease_pitch();
+            break;           
+        }
     }
 
     setInterval(function () {
