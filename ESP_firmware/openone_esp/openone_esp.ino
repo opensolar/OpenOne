@@ -46,12 +46,10 @@ typedef struct{
   uint8_t bits;
   uint8_t watchdog;
 } CONTROL;
-enum control_bits { SPARE1 = 0x02, STANDBY = 0x01 };
+enum control_bits { RED_LED = 0x02, RUN = 0x01 };
 
-
-
-WiFiClient espClient;
-PubSubClient client(espClient);
+WiFiClient wifi_client;
+PubSubClient mqtt_client(wifi_client);
 unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE  (50)
 char msg[MSG_BUFFER_SIZE];
@@ -136,21 +134,20 @@ void mqtt_on_message(char* topic, byte* payload, unsigned int length) {
 
 void reconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
+  while (!mqtt_client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
     String clientId = "ESP8266Client-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (mqtt_client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      //client.publish("opensolar", "hello world");
       // ... and resubscribe
-      client.subscribe("openone/#");
+      mqtt_client.subscribe("openone/#");
     } else {
       Serial.print("failed, rc=");
-      Serial.print(client.state());
+      Serial.print(mqtt_client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
@@ -160,12 +157,14 @@ void reconnect() {
 
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
+  digitalWrite(BUILTIN_LED, LOW);
+  
   Serial.begin(115200);
   spiBegin();
   
   setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(mqtt_on_message);
+  mqtt_client.setServer(mqtt_server, 1883);
+  mqtt_client.setCallback(mqtt_on_message);
 }
 
 
@@ -174,47 +173,24 @@ void setup() {
 
 void loop() {
 
-  if (!client.connected()) {
+  if (!mqtt_client.connected()) {
     roll.mode = COAST;
     pitch.mode = COAST;
     reconnect();
   }
-  client.loop();
+  mqtt_client.loop();
 
   ctrl.digit[0] = 11;
   ctrl.digit[1] = 22;
-  ctrl.bits = 0x80;
-   
+  ctrl.bits = RUN;
   
   unsigned long now = millis();
-  if (now - lastMsg> 100) {
+  if (now - lastMsg > 20) {
     lastMsg = now;
     ++value; 
-    //snprintf (msg, MSG_BUFFER_SIZE, "hello world %ld", value);
-    //Serial.print("Publish message: ");
-    //Serial.println(msg);
-    //client.publish("opensolar", msg);
 
-//    if(value % 256 < 64){
-//      pitch.speed = 65535;
-//      pitch.mode = CW;
-//      roll.speed = 0;
-//    } else if(value % 256 < 128){
-//      pitch.speed = 50000;
-//      pitch.mode = CCW;
-//      roll.speed = 0;
-//    } else if(value % 256 < 192){
-//      roll.speed = 40000;
-//      roll.mode = CW;
-//      pitch.speed = 0;
-//    } else {
-//      roll.speed = 30000;
-//      roll.mode = CCW;
-//      pitch.speed = 0;
-//    }
-
-
-    if((value % 256 == 0) || (value % 256 == 64) || (value % 256 == 128) || (value % 256 == 192)){
+    // print every 1.28s    
+    if(value % 64 == 0){
       Serial.println("pitch speed:" + String(pitch.speed) + " mode:" + String(pitch.mode));
       Serial.println("roll speed:" + String(roll.speed) + " mode:" + String(roll.mode));
     }

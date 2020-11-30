@@ -64,10 +64,6 @@ void spiBegin(){
   } else {
     Serial.println("ERROR: SPI RX & TX frames are not equal");
   }
-
-  Serial.println("motor size:" + String(sizeof(MOTOR)));
-  Serial.println("control size:" + String(sizeof(CONTROL)));
-  Serial.println("tx size:" + String(sizeof(SPI_TX_FRAME)));
 }
 
 // Send data to the ST microcontroller via SPI

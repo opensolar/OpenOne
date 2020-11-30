@@ -1,12 +1,9 @@
-Output: NC Drill Files
-Type  : NC Drill
-From  : Project [Main.PrjPcb]
-   Generated File[Main.TXT]
-   Generated File[Main.LDP]
-   Generated File[Main.DRR]
+Output: Bill of Materials
+Type  : BOM
+From  : Variant [[No Variations]] of Project [Main.PrjPcb]
 
 
-Files Generated   : 3
+Files Generated   : 0
 Documents Printed : 0
 
-Finished Output Generation At 11:21:42 PM On 8/31/2020
+Finished Output Generation At 8:16:18 PM On 10/20/2020

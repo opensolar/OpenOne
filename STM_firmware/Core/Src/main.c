@@ -1,10 +1,30 @@
 /* USER CODE BEGIN Header */
-/*
- * main.c
- *
- *  Created on: Sep 14, 2020
- *      Author: Martin Lafleur
- */
+//  _____   _____  _______ __   _ _______  _____         _______  ______   _____  _____
+// |     | |_____] |______ | \  | |______ |     | |      |_____| |_____/     |   |     |
+// |_____| |       |______ |  \_| ______| |_____| |_____ |     | |    \_ . __|__ |_____|
+
+// Author: Martin Lafleur (mlafleur@opensolar.io)
+// Date: Sep 2020
+// Project: OpenOne
+//
+// Copyright 2020 opensolar.io
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+// associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+// is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -149,16 +169,23 @@ int main(void)
 
     communication_ok = false;
     HAL_Delay(500);
-    enable_motors(communication_ok);
 
+    if(!communication_ok){
+      enable_motors(false);
+    } else if(!(rxFrame.control.bits & RUN)){
+      enable_motors(false);
 
+    } else {
+      enable_motors(true);
+      drive_roll_motor(&rxFrame.motor[0]);
+      drive_pitch_motor(&rxFrame.motor[1]);
+    }
 
-
-
-
-    drive_roll_motor(&rxFrame.motor[0]);
-    drive_pitch_motor(&rxFrame.motor[1]);
-
+    if(rxFrame.control.bits & RED_LED){
+      HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
+    } else {
+      HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
+    }
 
 
   }
@@ -458,14 +485,14 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
   static uint8_t  lastWatchdog = 0;
   if(hspi->Instance == SPI1){
     spi_rx_count++;
-    //HAL_SPI_DMAStop(hspi);
+
     memcpy((void *)&rxFrame, (void *)spi_rx_data, sizeof(SPI_RX_FRAME));
     // copy tx data
     txFrame.hall[0] = adc_buffer[0];
     txFrame.hall[1] = adc_buffer[1];
     txFrame.hall[2] = adc_buffer[2];
     txFrame.hall[3] = adc_buffer[3];
-    txFrame.status = 0xcafe;
+    txFrame.status = 0;
     memcpy(spi_tx_data, &txFrame, sizeof(SPI_TX_FRAME));
 
 
