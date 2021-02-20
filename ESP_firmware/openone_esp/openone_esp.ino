@@ -48,154 +48,68 @@ typedef struct{
 } CONTROL;
 enum control_bits { RED_LED = 0x02, RUN = 0x01 };
 
-WiFiClient wifi_client;
-PubSubClient mqtt_client(wifi_client);
+
 unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE  (50)
 char msg[MSG_BUFFER_SIZE];
-int value = 0;
+uint32_t free_counter = 0;
 
 static MOTOR roll;
 static MOTOR pitch;
 static CONTROL ctrl;
 
-void setup_wifi() {
-
-  delay(10);
-  // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  randomSeed(micros());
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-}
-
-void mqtt_on_message(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-  
-  MOTOR *motor;
-  if(((String)topic).indexOf("pitch") != -1){
-    motor = &pitch;
-  } else if(((String)topic).indexOf("roll") != -1){
-    motor = &roll;
-  } else {
-    Serial.println("Error: no motor is found in topic");
-    return;
-  }
-  
-  StaticJsonDocument<64> doc;
-  //{"speed": 65535, "mode":"CCW"}
-  //if(topic == pitch)
-  DeserializationError error = deserializeJson(doc, payload);
-  // Test if parsing succeeds.
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
-    return;
-  }
-  motor->speed = doc["speed"];
-  const String mode = doc["mode"];
-  
-  if(mode == "CCW"){
-    motor->mode = CCW;
-  } else if(mode == "CW"){
-    motor->mode = CW;
-  } else if(mode == "BRAKE"){
-    motor->mode = BRAKE;
-  } else if(mode == "COAST"){
-    motor->mode = COAST;
-  } else {
-    Serial.println("Error: motor mode is not supported");
-    motor->mode = COAST;
-  }
-  
-  
-
-}
-
-void reconnect() {
-  // Loop until we're reconnected
-  while (!mqtt_client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
-    // Attempt to connect
-    if (mqtt_client.connect(clientId.c_str())) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      // ... and resubscribe
-      mqtt_client.subscribe("openone/#");
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(mqtt_client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
-
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
+  
   digitalWrite(BUILTIN_LED, LOW);
+
+  // keep reset HIGH
+  pinMode(16, OUTPUT);  
+  digitalWrite(16, HIGH);
+ 
   
   Serial.begin(115200);
   spiBegin();
-  
   setup_wifi();
-  mqtt_client.setServer(mqtt_server, 1883);
-  mqtt_client.setCallback(mqtt_on_message);
 }
 
 
-
-
-
 void loop() {
+  uint32_t now;
 
-  if (!mqtt_client.connected()) {
+  mqtt_periodic();
+  if(!is_connected()){
     roll.mode = COAST;
     pitch.mode = COAST;
-    reconnect();
-  }
-  mqtt_client.loop();
+  } 
 
   ctrl.digit[0] = 11;
   ctrl.digit[1] = 22;
   ctrl.bits = RUN;
   
-  unsigned long now = millis();
+  
+  now = millis();
   if (now - lastMsg > 20) {
     lastMsg = now;
-    ++value; 
+    ++free_counter; 
 
     // print every 1.28s    
-    if(value % 64 == 0){
+    if(free_counter % 64 == 0){
       Serial.println("pitch speed:" + String(pitch.speed) + " mode:" + String(pitch.mode));
       Serial.println("roll speed:" + String(roll.speed) + " mode:" + String(roll.mode));
+
+      Serial.print("halls: ");
+      for(int i = 0; i < NB_HALLS; i++){
+        Serial.print(String(get_hall_sensor(i))+ " ");
+      }
+      Serial.print("\n");
+      Serial.println("ST status:" + String(get_st_status()));
+    
+
+      
     }
     
-    if(value % 2){
+    if(free_counter % 2){
       ctrl.watchdog =0x55;
     } else {
       ctrl.watchdog =0xAA;

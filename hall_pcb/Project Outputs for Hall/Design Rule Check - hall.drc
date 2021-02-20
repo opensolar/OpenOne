@@ -1,7 +1,7 @@
 Protel Design System Design Rule Check
 PCB File : C:\OneDrive\00_opensolar\OpenOne\hall_pcb\hall.PcbDoc
-Date     : 11/22/2020
-Time     : 10:01:37 AM
+Date     : 1/9/2021
+Time     : 10:41:18 AM
 
 Processing Rule : Clearance Constraint (Gap=0.203mm) (OnLayer('Top Layer')),(All)
 Rule Violations :0
@@ -56,4 +56,4 @@ Rule Violations :0
 
 
 Violations Detected : 0
-Time Elapsed        : 00:00:01
+Time Elapsed        : 00:00:00

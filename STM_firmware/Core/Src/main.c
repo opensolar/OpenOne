@@ -72,6 +72,28 @@ SPI_RX_FRAME rxFrame;
 #define NB_ADC_CHANNELS  4
 
 uint16_t adc_buffer[NB_ADC_CHANNELS];
+uint16_t adc_filtered[NB_ADC_CHANNELS];
+
+// Sensor  Hall(P2)  Main(P1)  PortA   ADC
+//          pin#      pin#
+// U1       5         4         4       2
+// U2       4         5         1       1
+// U3       3         6         5       3
+// U4       2         7         0       0
+
+
+
+#define HALL1 0
+#define HALL2 1
+#define HALL3 3
+#define HALL4 0
+
+
+
+
+
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -124,6 +146,7 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
+
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)adc_buffer, NB_ADC_CHANNELS); // Start ADC in DMA
 
   txFrame.hall[0] = 10;
@@ -138,7 +161,7 @@ int main(void)
 
   //while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) != GPIO_PIN_SET); // CS signal
 
-  while(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
+  //while(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
   HAL_SPI_TransmitReceive_DMA(&hspi1, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME));
 
 
@@ -180,13 +203,13 @@ int main(void)
       drive_roll_motor(&rxFrame.motor[0]);
       drive_pitch_motor(&rxFrame.motor[1]);
     }
-
+/*
     if(rxFrame.control.bits & RED_LED){
       HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
     } else {
       HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
     }
-
+*/
 
   }
   /* USER CODE END 3 */
@@ -254,9 +277,9 @@ static void MX_ADC_Init(void)
   */
   hadc.Instance = ADC1;
   hadc.Init.OversamplingMode = DISABLE;
-  hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV8;
   hadc.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc.Init.SamplingTime = ADC_SAMPLETIME_39CYCLES_5;
+  hadc.Init.SamplingTime = ADC_SAMPLETIME_160CYCLES_5;
   hadc.Init.ScanConvMode = ADC_SCAN_DIRECTION_FORWARD;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc.Init.ContinuousConvMode = ENABLE;
@@ -267,7 +290,7 @@ static void MX_ADC_Init(void)
   hadc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc.Init.LowPowerAutoWait = DISABLE;
-  hadc.Init.LowPowerFrequencyMode = DISABLE;
+  hadc.Init.LowPowerFrequencyMode = ENABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
   {
@@ -487,11 +510,12 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
     spi_rx_count++;
 
     memcpy((void *)&rxFrame, (void *)spi_rx_data, sizeof(SPI_RX_FRAME));
+
     // copy tx data
-    txFrame.hall[0] = adc_buffer[0];
-    txFrame.hall[1] = adc_buffer[1];
-    txFrame.hall[2] = adc_buffer[2];
-    txFrame.hall[3] = adc_buffer[3];
+    txFrame.hall[0] = adc_filtered[0];
+    txFrame.hall[1] = adc_filtered[1];
+    txFrame.hall[2] = adc_filtered[2];
+    txFrame.hall[3] = adc_filtered[3];
     txFrame.status = 0;
     memcpy(spi_tx_data, &txFrame, sizeof(SPI_TX_FRAME));
 
@@ -513,6 +537,12 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
       NVIC_SystemReset();
     }
 
+    // uncomment when not circular mode
+    //while(HAL_SPI_GetState(hspi) == HAL_SPI_STATE_BUSY_TX_RX);
+    //if(HAL_SPI_TransmitReceive_DMA(hspi, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME)) != HAL_OK){
+    //  Error_Handler();
+    //}
+
 
 
   }
@@ -520,12 +550,33 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi){
 
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi){
   if(hspi->Instance == SPI1){
-    while(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
-    HAL_SPI_TransmitReceive_DMA(&hspi1, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME));
-    HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
+    //while(HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
+    //HAL_SPI_TransmitReceive_DMA(&hspi1, spi_tx_data, spi_rx_data, sizeof(SPI_RX_FRAME));
+
+    Error_Handler();
+
   }
 
 }
+
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+  // Measured 348us
+  // TAU = 1ms, T = 348us
+  // K = exp(-T / TAU)
+  const uint32_t K = (uint32_t)(0.95 * 256);
+  //HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+
+  for(int i = 0; i < NB_ADC_CHANNELS; i++){
+    uint32_t f = ((uint32_t)adc_buffer[i] * (256UL - K) + K * adc_filtered[i]);
+    adc_filtered[i] = (uint16_t)(f / 256UL) + (((f % 256) >= 128) ? 1 : 0);   // round the value
+
+    // int instead of round:
+    // adc_filtered[i] = (uint16_t)(((uint32_t)adc_buffer[i] * (256UL - K) + K * adc_filtered[i]) / 256UL);
+  }
+
+}
+
 
 /* USER CODE END 4 */
 
@@ -537,7 +588,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+  HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
   /* USER CODE END Error_Handler_Debug */
 }
 

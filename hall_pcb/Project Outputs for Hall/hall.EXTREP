@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------------------------
-Gerber File Extension Report For: hall.GBR   9/26/2020  2:40:54 PM
+Gerber File Extension Report For: hall.GBR   1/9/2021  10:43:49 AM
 ------------------------------------------------------------------------------------------
 
 
@@ -11,7 +11,6 @@ Layer Extension     Layer Description
 .GTO                Top Overlay                             
 .GTS                Top Solder                              
 .GBS                Bottom Solder                           
-.GBP                Bottom Paste                            
 .GBO                Bottom Overlay                          
 .GKO                Keep-Out Layer                          
 .GM1                Mechanical 1                            

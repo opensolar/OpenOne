@@ -43,7 +43,7 @@ const int SPI_BUFFER_SIZE = 12;
 uint8_t txData[SPI_BUFFER_SIZE];
 uint8_t rxData[SPI_BUFFER_SIZE];    
 int rxLength;
-
+SPI_RX_FRAME rxFrame;
 
 
 // To initialize the SPI and CAN, must be called once at startup
@@ -74,6 +74,7 @@ bool writeData(const uint8_t * tx, size_t txLength) {
   }
   //Serial.println("tx size:" + String(txLength));
 
+  memset(rxData, 0, SPI_BUFFER_SIZE);
   memset(txData, 0, SPI_BUFFER_SIZE);
   memcpy(txData, tx, txLength);
  
@@ -85,10 +86,12 @@ bool writeData(const uint8_t * tx, size_t txLength) {
   for(int i = 0; i < SPI_BUFFER_SIZE; i++){
     rxData[i] = SPI.transfer(txData[i]);  
   }
-
-
+  
   digitalWrite(GPIO_SS, HIGH);
   SPI.endTransaction();
+  
+  
+  
   return true;
 }
 
@@ -103,15 +106,16 @@ void execute_spi_transaction(MOTOR *roll, MOTOR *pitch, CONTROL *control){
 
   writeData((const uint8_t *)&txFrame, sizeof(SPI_TX_FRAME)); 
 
-  SPI_RX_FRAME rxFrame;
+  
   memcpy((void *)&rxFrame, (void *)rxData, sizeof(SPI_RX_FRAME));
+}
 
-  //Serial.print("halls: ");
-  //for(int i = 0; i < NB_HALLS; i++){
-      //uint32_t mv = 3000 * rxFrame.hall[i] / 4096;
-      //Serial.print(String(mv)+ " ");
-  //    Serial.print(String(rxFrame.hall[i])+ " ");
- // }
- // Serial.print("\n");
-  //Serial.println("ST status:" + String(rxFrame.st_status));
+
+uint16_t get_hall_sensor(uint8_t id){
+  if(id > 3) { return 0; }
+  return rxFrame.hall[id];
+}
+
+uint16_t get_st_status(){
+  return rxFrame.st_status;
 }
