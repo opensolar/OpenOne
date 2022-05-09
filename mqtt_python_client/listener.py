@@ -33,7 +33,7 @@ client = mqtt.Client("laptop_test")
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(BROKER, 1883, 15)
-#client.subscribe("opensolar")
+client.subscribe("opensolar")
 
 client.loop_start()
 while(True):

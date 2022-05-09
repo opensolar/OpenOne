@@ -31,6 +31,12 @@
 #include <ArduinoJson.h>
 #include "credentials.h"
 
+
+// Example of credentials.h
+//const char* ssid = "my_ssid";
+//const char* password = "my_password";
+//const char* mqtt_server = "technolaf.com:1883";
+
 const int GPIO_SS = 15; 
 const int NB_HALLS = 4;
 enum motor_modes { BRAKE = 0, CW = 1, CCW = 2, COAST = 3};

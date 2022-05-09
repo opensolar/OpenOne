@@ -36,17 +36,33 @@ client = mqtt.Client("latitude_01344")
 #client.username_pw_set("", password="")
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect("192.168.0.200", 1883, 15)
+#client.connect("192.168.0.200", 1883, 15)
+client.connect("technolaf.com", 1883, 15)
 client.loop_start()
 while not connected:
     time.sleep(0.5)
-i = 0
+
 while(True):
-    payload = "technolaf " + str(i)
-    topic = "opensolar_todevice"
+
+    topic = "openone/11b435/pitch"
+    #topic = "openone/pitch"
+    payload = '{"speed": 50000, "mode":"CW"}'
     print("publishing payload:" + payload + " topic:" + topic)
     client.publish(topic,payload, 0)
-    i += 1
-    time.sleep(10.0)
+    time.sleep(1.0)
+
+    
+    payload = '{"speed": 50000, "mode":"CCW"}'
+    print("publishing payload:" + payload + " topic:" + topic)
+    client.publish(topic,payload, 0)
+
+    time.sleep(1.0)
+
+    
+    payload = '{"speed": 0, "mode":"COAST"}'
+    print("publishing payload:" + payload + " topic:" + topic)
+    client.publish(topic,payload, 0)
+    time.sleep(5.0)
+
 client.loop_stop()    
 

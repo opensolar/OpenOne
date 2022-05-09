@@ -23,56 +23,9 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-
+  Serial.println("Device ID: "+ String(ESP.getChipId(), HEX));
   mqtt_client.setServer(mqtt_server, 1883);
   mqtt_client.setCallback(mqtt_on_message);
-  
-}
-
-void mqtt_on_message(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-  
-  MOTOR *motor;
-  if(((String)topic).indexOf("pitch") != -1){
-    motor = &pitch;
-  } else if(((String)topic).indexOf("roll") != -1){
-    motor = &roll;
-  } else {
-    Serial.println("Error: no motor is found in topic");
-    return;
-  }
-  
-  StaticJsonDocument<64> doc;
-  //{"speed": 65535, "mode":"CCW"}
-  //if(topic == pitch)
-  DeserializationError error = deserializeJson(doc, payload);
-  // Test if parsing succeeds.
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
-    return;
-  }
-  motor->speed = doc["speed"];
-  const String mode = doc["mode"];
-  
-  if(mode == "CCW"){
-    motor->mode = CCW;
-  } else if(mode == "CW"){
-    motor->mode = CW;
-  } else if(mode == "BRAKE"){
-    motor->mode = BRAKE;
-  } else if(mode == "COAST"){
-    motor->mode = COAST;
-  } else {
-    Serial.println("Error: motor mode is not supported");
-    motor->mode = COAST;
-  }
 }
 
 void reconnect() {
@@ -87,7 +40,10 @@ void reconnect() {
       Serial.println("connected");
       // Once connected, publish an announcement...
       // ... and resubscribe
-      mqtt_client.subscribe("openone/#");
+
+      String topic = "openone/" + String(ESP.getChipId(), HEX) + "/#";
+      mqtt_client.subscribe(topic.c_str());
+      Serial.println("subscribed to " + topic);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqtt_client.state());
@@ -97,6 +53,58 @@ void reconnect() {
     }
   }
 }
+
+void mqtt_on_message(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+  // choose the motor according to topic
+  MOTOR *motor;
+  if(((String)topic).indexOf("pitch") != -1){
+    motor = &pitch;
+  } else if(((String)topic).indexOf("roll") != -1){
+    motor = &roll;
+  } else {
+    Serial.println("Error: invalid topic");
+    return;
+  }
+
+  // parse the payload
+  StaticJsonDocument<64> doc;
+  
+  DeserializationError error = deserializeJson(doc, payload);
+  // Test if parsing succeeds.
+  if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.c_str());
+    return;
+  }
+
+  // set the motor speed
+  motor->speed = doc["speed"];
+  const String mode = doc["mode"];
+
+  // set the motor mode
+  if(mode == "CCW"){
+    motor->mode = CCW;
+  } else if(mode == "CW"){
+    motor->mode = CW;
+  } else if(mode == "BRAKE"){
+    motor->mode = BRAKE;
+  } else if(mode == "COAST"){
+    motor->mode = COAST;
+  } else {
+    Serial.println("Error: motor mode is not supported");
+    motor->mode = COAST;
+  }
+}
+
+
 
 
 bool is_connected(){
